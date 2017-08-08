@@ -1,0 +1,9 @@
+#!/bin/sh
+
+/usr/sbin/addsudo /bin/wget app-drupal
+/usr/sbin/addsudo /bin/zip app-drupal
+/usr/sbin/addsudo /bin/zip app-drupal
+/usr/sbin/addsudo /bin/unzip app-drupal
+/usr/sbin/addsudo /bin/cp app-drupal
+/usr/sbin/addsudo /bin/mv app-drupal
+

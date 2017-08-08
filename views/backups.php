@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * Drupal Add project View.
+ *
+ * @category   Apps
+ * @package    Drupal
+ * @subpackage Views
+ * @author     ClearFoundation <developer@clearfoundation.com>
+ * @copyright  2017 ClearFoundation
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
+ * @link    http://www.clearfoundation.com/docs/developer/apps/drupal/
+ */
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Load dependencies
+///////////////////////////////////////////////////////////////////////////////
+
+$this->lang->load('drupal');
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Headers
+///////////////////////////////////////////////////////////////////////////////
+$headers = array(
+    lang('drupal_backup_name'),
+);
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Buttons
+///////////////////////////////////////////////////////////////////////////////
+
+$buttons  = array(
+    anchor_custom('/app/drupal','Back','low')
+);
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Items
+///////////////////////////////////////////////////////////////////////////////
+foreach ($backups as $value) {
+    $item['title'] = $value['name'];
+    $download_action = "/app/drupal/backup/download/".$value['name'];
+    $delete_action = "/app/drupal/backup/delete/".$value['name'];
+    $item['anchors'] = button_set(
+        array(
+            anchor_custom($download_action, lang('drupal_download'), 'high'),
+            anchor_delete($delete_action, 'low'),
+        )
+    );
+    $item['details'] = array(
+        $value['name']
+    );
+    $items[] = $item;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// List table
+///////////////////////////////////////////////////////////////////////////////
+
+echo summary_table(
+    lang('drupal_my_backups'),
+    $buttons,
+    $headers,
+    $items
+);
