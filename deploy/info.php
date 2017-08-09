@@ -28,18 +28,15 @@ $app['subcategory'] = lang('base_subcategory_web');
 
 
 $app['core_requires'] = array(
-    'mariadb-server >= 5.5.40',
-    'app-webapp',
-    'app-system-database >= 1:1.6.1',
-    'webconfig-php-mysql',
-    'app-webapp-core',
+    'mod_authnz_external',
+    'mod_authz_unixgroup',
+    'mod_ssl',
+    'phpMyAdmin',
 );
 
 $app['requires'] = array(
-    'phpMyAdmin >= 4.4.9',
-    'app-webapp-core',
-    'app-system-database-core >= 1:1.6.1',
-    'app-mariadb >= 2.3.3',
+    'app-web-server',
+    'app-mariadb',
 );
 
 $app['core_directory_manifest'] = array(
