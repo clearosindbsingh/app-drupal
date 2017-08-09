@@ -68,7 +68,6 @@ foreach ($projects as $value) {
     $item['anchors'] = button_set(
         array(
         	anchor_custom($access_action, lang('drupal_access_website'), 'high', array('target' => '_blank')),
-        	anchor_custom($access_admin_action, lang('drupal_access_admin'), 'high', array('target' => '_blank')),
         	anchor_delete($delete_action, 'low', array('class' => 'delete_project_anchor', 'data' => array('folder_name' => $value['name']))),
         )
     );

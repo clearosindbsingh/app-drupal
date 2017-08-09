@@ -46,7 +46,7 @@
  * @link    http://www.clearfoundation.com/docs/developer/apps/drupal/
  */
 
-class Drupal extends ClearOS_Controller
+class Backup extends ClearOS_Controller
 {
     /**
      * Drupal Drupal controller.
