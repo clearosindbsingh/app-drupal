@@ -55,32 +55,32 @@ class Backup extends ClearOS_Controller
      */
     function index()
     {
-		// Load libraries
-    	//---------------
+        // Load libraries
+        //---------------
 
-		$this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		$data['backups'] = $this->drupal->get_backup_list();
-		$this->page->view_form('backups', $data, lang('drupal_available_backup'));
-	}
-	/**
+        $data['backups'] = $this->drupal->get_backup_list();
+        $this->page->view_form('backups', $data, lang('drupal_available_backup'));
+    }
+    /**
      * Download Drupal file
      *
      * @param string $file_name File Name
      * @return Start dorce download 
      */ 
     function download($file_name)
-	{
-		// Load libraries
+    {
+        // Load libraries
         //---------------
 
-		$this->lang->load('drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		$this->load->library('drupal/Drupal');
-		$this->drupal->download_backup($file_name);
-	}
-	/**
+        $this->drupal->download_backup($file_name);
+    }
+    /**
      * Delete Drupal view.
      *
      * @param string $file_name file Nane
@@ -92,7 +92,7 @@ class Backup extends ClearOS_Controller
         // Load libraries
         //---------------
         $this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->load->library('drupal/Drupal');
         
         // Show confirm
         //-------------
@@ -108,17 +108,16 @@ class Backup extends ClearOS_Controller
      *
      * @return @rediret load backup index page
      */
-	function destroy($file_name)
-	{
-		// Load libraries
+    function destroy($file_name)
+    {
+        // Load libraries
         //---------------
 
-		$this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		$this->drupal->delete_backup($file_name);
-		$this->page->set_message(lang('drupal_backup_delete_success'), 'info');
-		redirect('/drupal/backup');
-	}
-
+        $this->drupal->delete_backup($file_name);
+        $this->page->set_message(lang('drupal_backup_delete_success'), 'info');
+        redirect('/drupal/backup');
+    }
 }

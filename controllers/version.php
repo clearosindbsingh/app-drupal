@@ -48,40 +48,40 @@
 
 class Version extends ClearOS_Controller
 {
-	/**
+    /**
      * Download Version file on local system
      *
      * @param string $file_name File Name 
      * @return redirect to index after download 
      */ 
     function download($file_name)
-	{
-		// Load dependencies
+    {
+        // Load dependencies
         //------------------
 
-		$this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		$this->drupal->download_version($file_name);
-		$this->page->set_message(lang('drupal_version_download_success'), 'info');
-		redirect('/drupal');
-	}
-	/**
+        $this->drupal->download_version($file_name);
+        $this->page->set_message(lang('drupal_version_download_success'), 'info');
+        redirect('/drupal');
+    }
+    /**
      * Delete Version file on local system
      *
      * @param string $file_name File Name 
      * @return redirect to index after delete 
      */ 
-	function delete($file_name)
-	{
-		// Load dependencies
+    function delete($file_name)
+    {
+        // Load dependencies
         //------------------
 
-		$this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		$this->drupal->delete_version($file_name);
-		$this->page->set_message(lang('drupal_version_delete_success'), 'info');
-		redirect('/drupal');
-	}
+        $this->drupal->delete_version($file_name);
+        $this->page->set_message(lang('drupal_version_delete_success'), 'info');
+        redirect('/drupal');
+    }
 }

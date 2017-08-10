@@ -496,9 +496,8 @@ class Drupal extends Daemon
 
         //// create a temp folder to copy
         $folder = new Folder($this->get_project_path('drupal'));
-        if(!$folder->exists())
-        	$folder->create('root', 'root', 0777);
-
+        if (!$folder->exists())
+            $folder->create('root', 'root', 0777);
 
         $shell = new Shell();
         $options['validate_exit_code'] = FALSE;
@@ -525,14 +524,13 @@ class Drupal extends Daemon
         $folder = new Folder($setup_path);
         $list = $folder->get_listing(TRUE, TRUE);
         foreach ($list as $key => $value) {
-        	if ($value['is_dir']) {
-        		$folder = new Folder($setup_path.$value['name']);
-        		$folder->move_to($this->get_project_path($folder_name));
-        	}
-        	else {
-        		$file = new File($setup_path.$value['name']);
-        		$file->move_to($this->get_project_path($folder_name));
-        	}
+            if ($value['is_dir']) {
+                $folder = new Folder($setup_path.$value['name']);
+                $folder->move_to($this->get_project_path($folder_name));
+            } else {
+                $file = new File($setup_path.$value['name']);
+                $file->move_to($this->get_project_path($folder_name));
+            }
         }
 
         $folder = new Folder($this->get_project_path($folder_name).'sites');
@@ -547,7 +545,7 @@ class Drupal extends Daemon
 
         // delete temp zip file
         $file = new File($path_drupal.'/'.$version_name);
-        if($file->exists() && (!$file->is_directory()))
+        if ($file->exists() && (!$file->is_directory()))
             $file->delete();
         return $output;
     }
@@ -574,7 +572,7 @@ class Drupal extends Daemon
         $versions = $this->get_versions();
         $download_url = '';
         foreach ($versions as $key => $value) {
-            if($value['file_name'] == $version_file_name) {
+            if ($value['file_name'] == $version_file_name) {
                 $download_url = $value['download_url'];
                 break;
             }
@@ -671,8 +669,8 @@ class Drupal extends Daemon
         $file = new File($zip_path);
 
         $backup_folder = new Folder(self::PATH_BACKUP);
-        if(!$backup_folder->exists())
-        	$backup_folder->create('root','root',755);
+        if (!$backup_folder->exists())
+            $backup_folder->create('root', 'root', 755);
 
         if ($file->exists() && !$file->is_directory()) {
             $file->move_to(self::PATH_BACKUP);
@@ -701,26 +699,26 @@ class Drupal extends Daemon
      */
     function find_value_from_config($folder_name, $key)
     {
-    	$folder_path = $this->get_project_path($folder_name);
+        $folder_path = $this->get_project_path($folder_name);
         $main_file = $folder_path.self::CONFIG_MAIN_FILE_PATH;
         
         $file = new File($main_file, TRUE);
         $lines = $file->get_contents_as_array();
         $key_number = '';
-        $setuped = false;
+        $setuped = FALSE;
         foreach ($lines as $key => $value) {
-        	if(trim($value) == "'default' =>") {
-        		$setuped = true;
-        	}
-        	if (strpos($value, "'$key' =>") !== false) {
-        		if ($setuped) {
-			    	$key_number = $key;
-			    	break;
-        		}
-			}
+        	if (trim($value) == "'default' =>") {
+        		$setuped = TRUE;
+            }
+            if (strpos($value, "'$key' =>") !== FALSE) {
+                if ($setuped) {
+                    $key_number = $key;
+                    break;
+                }
+            }
         }
         if (!$key_number)
-        	return false;
+        	return FALSE;
         $string = explode(' => ', $lines[$key_number]);
         preg_match('/".*?"|\'.*?\'/', $string[1], $matches);
         $value = trim($matches[0], "'");
@@ -805,6 +803,7 @@ class Drupal extends Daemon
     function download_backup($file_name)
     {
         clearos_profile(__METHOD__, __LINE__);
+
         // Make file full path
         $file_path = self::PATH_BACKUP.$file_name;
 

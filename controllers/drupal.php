@@ -61,6 +61,7 @@ class Drupal extends ClearOS_Controller
 
         $this->lang->load('drupal');
         $this->load->library('drupal/Drupal');
+
         $projects = $this->drupal->get_project_list();
         $versions = $this->drupal->get_versions();
         $data['projects'] = $projects;
@@ -71,120 +72,113 @@ class Drupal extends ClearOS_Controller
         //-----------
         $this->page->view_form('drupal', $data, lang('drupal_app_name'));
     }
-	/**
+    /**
      * Add a new Project
      * 
      * @return load view
      */ 
-	function addproject()
-	{
-		// Load dependencies
+    function addproject()
+    {
+        // Load dependencies
         //------------------
 
-		$this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		$version_all = $this->drupal->get_versions();
-		$versions = array();
-		foreach ($version_all as $key => $value) 
-		{
-			if($value['clearos_path'])
-				$versions[$value['file_name']] = $value['version'];
-		}
-		if($_POST)
-		{
-			// Handle Form 
-        	//------------------
+        $version_all = $this->drupal->get_versions();
+        $versions = array();
+        foreach ($version_all as $key => $value) {
+            if ($value['clearos_path'])
+                $versions[$value['file_name']] = $value['version'];
+        }
+        if ($_POST) {
 
-			$use_exisiting_database = $this->input->post('use_exisiting_database');
-			$this->form_validation->set_policy('folder_name', 'drupal/Drupal', 'validate_folder_name', TRUE);
-			if($use_exisiting_database == "Yes")
-				$this->form_validation->set_policy('database_name', 'drupal/Drupal', 'validate_existing_database', TRUE);
-			else
-				$this->form_validation->set_policy('database_name', 'drupal/Drupal', 'validate_new_database', TRUE);
-			$this->form_validation->set_policy('database_user_name', 'drupal/Drupal', 'validate_database_username', TRUE);
-			$this->form_validation->set_policy('database_user_password', 'drupal/Drupal', 'validate_database_password', TRUE);
-			$this->form_validation->set_policy('root_username', 'drupal/Drupal', 'validate_root_username', TRUE);
-			$this->form_validation->set_policy('root_password', 'drupal/Drupal', 'validate_root_password', TRUE);
-			$this->form_validation->set_policy('drupal_version', 'drupal/Drupal', 'validate_drupal_version', TRUE);
-			$form_ok = $this->form_validation->run();
-			if($form_ok)
-			{
-				$folder_name = $this->input->post('folder_name');
-				$database_name = $this->input->post('database_name');
-				$database_username = $this->input->post('database_user_name');
-				$database_user_password = $this->input->post('database_user_password');
-				$root_username = $this->input->post('root_username');
-				$root_password = $this->input->post('root_password');
-				$drupal_version = $this->input->post('drupal_version');
-				try {
-					$this->drupal->add_project($folder_name, $database_name, $database_username, $database_user_password, $root_username, $root_password, $use_exisiting_database, $drupal_version);
-					//$this->drupal->create_project_folder($folder_name);   
-					//$this->drupal->put_drupal($folder_name);
-					$this->page->set_message(lang('drupal_project_add_success'), 'info');
-					redirect('/drupal');
-				} catch (Exception $e) {
-					$this->page->view_exception($e);
-				}
-			}
-		}
-		$data['versions'] = $versions;
-		$data['default_version'] = 'latest.zip';
-		$this->page->view_form('add_project', $data, lang('drupal_app_name'));
-	}
-	/**
+            // Handle Form 
+            //------------------
+
+            $use_exisiting_database = $this->input->post('use_exisiting_database');
+            $this->form_validation->set_policy('folder_name', 'drupal/Drupal', 'validate_folder_name', TRUE);
+            if ($use_exisiting_database == "Yes")
+                $this->form_validation->set_policy('database_name', 'drupal/Drupal', 'validate_existing_database', TRUE);
+            else
+                $this->form_validation->set_policy('database_name', 'drupal/Drupal', 'validate_new_database', TRUE);
+            $this->form_validation->set_policy('database_user_name', 'drupal/Drupal', 'validate_database_username', TRUE);
+            $this->form_validation->set_policy('database_user_password', 'drupal/Drupal', 'validate_database_password', TRUE);
+            $this->form_validation->set_policy('root_username', 'drupal/Drupal', 'validate_root_username', TRUE);
+            $this->form_validation->set_policy('root_password', 'drupal/Drupal', 'validate_root_password', TRUE);
+            $this->form_validation->set_policy('drupal_version', 'drupal/Drupal', 'validate_drupal_version', TRUE);
+            $form_ok = $this->form_validation->run();
+            if ($form_ok) {
+                $folder_name = $this->input->post('folder_name');
+                $database_name = $this->input->post('database_name');
+                $database_username = $this->input->post('database_user_name');
+                $database_user_password = $this->input->post('database_user_password');
+                $root_username = $this->input->post('root_username');
+                $root_password = $this->input->post('root_password');
+                $drupal_version = $this->input->post('drupal_version');
+                try {
+                    $this->drupal->add_project($folder_name, $database_name, $database_username, $database_user_password, $root_username, $root_password, $use_exisiting_database, $drupal_version);
+                    $this->page->set_message(lang('drupal_project_add_success'), 'info');
+                    redirect('/drupal');
+                } catch (Exception $e) {
+                    $this->page->view_exception($e);
+                }
+            }
+        }
+        $data['versions'] = $versions;
+        $data['default_version'] = 'latest.zip';
+        $this->page->view_form('add_project', $data, lang('drupal_app_name'));
+    }
+    /**
      * Delete Project
      *
      * @param string $folder_name Folder Name 
      * @return redirect to index after delete
      */ 
-	function delete($folder_name)
-	{
-		// Load dependencies
+    function delete($folder_name)
+    {
+        // Load dependencies
         //------------------
 
-		$this->lang->load('drupal');
-		$this->load->library('drupal/Drupal');
+        $this->lang->load('drupal');
+        $this->load->library('drupal/Drupal');
 
-		if ($_POST) {
-			$database_name = '';
-			$folder_name = $this->input->post('folder_name');
-			$delete_database = $this->input->post('delete_database');
-			if ($folder_name)
-				$database_name = $this->drupal->get_database_name($folder_name);
-			$_POST['database_name'] = $database_name;
-			$_POST['folder_name'] = $folder_name;
-			$this->form_validation->set_policy('folder_name', 'drupal/Drupal', 'validate_folder_name_exists', TRUE);
+        if ($_POST) {
+            $database_name = '';
+            $folder_name = $this->input->post('folder_name');
+            $delete_database = $this->input->post('delete_database');
+            if ($folder_name)
+                $database_name = $this->drupal->get_database_name($folder_name);
+            $_POST['database_name'] = $database_name;
+            $_POST['folder_name'] = $folder_name;
+            $this->form_validation->set_policy('folder_name', 'drupal/Drupal', 'validate_folder_name_exists', TRUE);
 
-			if ($delete_database && $database_name) {
-				$this->form_validation->set_policy('database_name', 'drupal/Drupal', 'validate_existing_database', TRUE);
-				$this->form_validation->set_policy('root_username', 'drupal/Drupal', 'validate_root_username', TRUE);
-				$this->form_validation->set_policy('root_password', 'drupal/Drupal', 'validate_root_password', TRUE);
-			}
-			$form_ok = $this->form_validation->run();
+            if ($delete_database && $database_name) {
+                $this->form_validation->set_policy('database_name', 'drupal/Drupal', 'validate_existing_database', TRUE);
+                $this->form_validation->set_policy('root_username', 'drupal/Drupal', 'validate_root_username', TRUE);
+                $this->form_validation->set_policy('root_password', 'drupal/Drupal', 'validate_root_password', TRUE);
+            }
+            $form_ok = $this->form_validation->run();
 
-			if ($form_ok) {
-				$folder_name = $this->input->post('folder_name');
-				$database_name = $this->input->post('database_name');
-				$root_username = $this->input->post('root_username');
-				$root_password = $this->input->post('root_password');
+            if ($form_ok) {
+                $folder_name = $this->input->post('folder_name');
+                $database_name = $this->input->post('database_name');
+                $root_username = $this->input->post('root_username');
+                $root_password = $this->input->post('root_password');
 
-				try {	
-					$this->drupal->delete_folder($folder_name);
+                try {	
+                    $this->drupal->delete_folder($folder_name);
 
-					if ($delete_database && $database_name) {
-						//$this->drupal->backup_database($database_name, $root_username, $root_password); /// due to some temp error I commented it
-						$this->drupal->delete_database($database_name, $root_username, $root_password);
-					}
-					$this->page->set_message(lang('drupal_project_delete_success'), 'info');
-					redirect('/drupal');
-				} catch (Exception $e) {
-					$this->page->view_exception($e);
-				}
-			}
-			/*else {
-				$this->page->view_exception(validation_errors());	
-			}*/
-		}
-	}
+                    if ($delete_database && $database_name) {
+                        //$this->drupal->backup_database($database_name, $root_username, $root_password); /// due to some temp error I commented it
+                        $this->drupal->delete_database($database_name, $root_username, $root_password);
+                    }
+                    $this->page->set_message(lang('drupal_project_delete_success'), 'info');
+                    redirect('/drupal');
+                } catch (Exception $e) {
+                    $this->page->view_exception($e);
+                }
+            }
+        }
+    }
 }
