@@ -138,7 +138,6 @@ class Drupal extends Daemon
     const CONFIG_SAMPLE_FILE_NAME = 'default.settings.php';
     const CONFIG_MAIN_FILE_NAME = 'settings.php';
     const CONFIG_MAIN_FILE_PATH = 'sites/default/settings.php';
-    const FOLDER_FLEXSHARE_WORDPRESS = '/var/flexshare/shares/wordpress';
 
     ///////////////////////////////////////////////////////////////////////////
     // V A R I A B L E S
