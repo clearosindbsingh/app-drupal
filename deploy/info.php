@@ -7,10 +7,10 @@
 $app['basename'] = 'drupal';
 $app['version'] = '1.0.0';
 $app['release'] = '1';
-$app['vendor'] = 'Vendor'; // e.g. Acme Co
-$app['packager'] = 'Packager'; // e.g. Gordie Howe
-$app['license'] = 'MyLicense'; // e.g. 'GPLv3';
-$app['license_core'] = 'MyLicense'; // e.g. 'LGPLv3';
+$app['vendor'] = 'Xtreem Solution';
+$app['packager'] = 'Xtreem Solution';
+$app['license'] = 'GPL';
+$app['license_core'] = 'GPL';
 $app['description'] = lang('drupal_app_description');
 
 /////////////////////////////////////////////////////////////////////////////
@@ -32,15 +32,39 @@ $app['core_requires'] = array(
     'mod_authz_unixgroup',
     'mod_ssl',
     'phpMyAdmin',
+    'app-flexshare-core',
 );
 
 $app['requires'] = array(
     'app-web-server',
     'app-mariadb',
+    'unzip',
+    'zip',
 );
 
 $app['core_directory_manifest'] = array(
-    '/var/clearos/drupal' => array(),
-    '/var/clearos/drupal/backup' => array(),
-    '/var/clearos/drupal/verions' => array(),
+    '/var/clearos/drupal' => array(
+        'mode' => '0775',
+        'owner' => 'webconfig',
+        'group' => 'webconfig'
+	),
+    '/var/clearos/drupal/backup' => array(
+        'mode' => '0775',
+        'owner' => 'webconfig',
+        'group' => 'webconfig'
+	),
+    '/var/clearos/drupal/versions' => array(
+        'mode' => '0775',
+        'owner' => 'webconfig',
+        'group' => 'webconfig'
+    ),
+    '/var/clearos/drupal/sites' => array(
+        'mode' => '0775',
+        'owner' => 'webconfig',
+        'group' => 'webconfig'
+	)
+);
+
+$app['core_file_manifest'] = array(
+    'app-drupal.conf'=> array('target' => '/etc/httpd/conf.d/app-drupal.conf'),
 );

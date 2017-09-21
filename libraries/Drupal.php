@@ -69,6 +69,9 @@ use \clearos\apps\base\File_Types as File_Types;
 use \clearos\apps\base\Folder as Folder;
 use \clearos\apps\base\Tuning as Tuning;
 use \clearos\apps\network\Role as Role;
+use \clearos\apps\mariadb\MariaDB as MariaDB;       
+use \clearos\apps\web_server\Httpd as Httpd;        
+use \clearos\apps\flexshare\Flexshare as Flexshare;
 
 clearos_load_library('base/Daemon');
 clearos_load_library('base/File');
@@ -77,6 +80,9 @@ clearos_load_library('base/File_Types');
 clearos_load_library('base/Folder');
 clearos_load_library('base/Tuning');
 clearos_load_library('network/Role');
+clearos_load_library('mariadb/MariaDB');        
+clearos_load_library('web_server/Httpd');       
+clearos_load_library('flexshare/Flexshare');
 
 // Exceptions
 //-----------
@@ -86,11 +92,15 @@ use \clearos\apps\base\Engine_Exception as Engine_Exception;
 use \clearos\apps\base\File_No_Match_Exception as File_No_Match_Exception;
 use \clearos\apps\base\File_Not_Found_Exception as File_Not_Found_Exception;
 use \clearos\apps\base\Validation_Exception as Validation_Exception;
+use \clearos\apps\flexshare\Flexshare_Not_Found_Exception as Flexshare_Not_Found_Exception;     
+use \clearos\apps\accounts\Accounts_Driver_Not_Set_Exception as Accounts_Driver_Not_Set_Exception;
 
 clearos_load_library('base/Engine_Exception');
 clearos_load_library('base/File_No_Match_Exception');
 clearos_load_library('base/File_Not_Found_Exception');
 clearos_load_library('base/Validation_Exception');
+clearos_load_library('flexshare/Flexshare_Not_Found_Exception');        
+clearos_load_library('accounts/Accounts_Driver_Not_Set_Exception');
 
 ///////////////////////////////////////////////////////////////////////////////
 // C L A S S
@@ -115,18 +125,20 @@ class Drupal extends Daemon
     ///////////////////////////////////////////////////////////////////////////
 
     const PATH_WEBROOT = '/var/www/html';
-    const PATH_DRUPAL = '/var/www/html/drupal';
+    const PATH_DRUPAL = '/var/clearos/drupal/sites';
     const PATH_VERSIONS = '/var/clearos/drupal/versions/';
     const PATH_BACKUP = '/var/clearos/drupal/backup/';
     const COMMAND_MYSQLADMIN = '/usr/bin/mysqladmin';
+    const COMMAND_MYSQLDUMP = '/usr/bin/mysqldump';
     const COMMAND_MYSQL = '/usr/bin/mysql';
-    const COMMAND_WGET = '/bin/wget';
-    const COMMAND_ZIP = '/bin/zip';
-    const COMMAND_UNZIP = '/bin/unzip';
-    const COMMAND_MV = '/bin/mv';
+    const COMMAND_WGET = '/usr/bin/wget';
+    const COMMAND_ZIP = '/usr/bin/zip';
+    const COMMAND_UNZIP = '/usr/bin/unzip';
+    const COMMAND_MV = '/usr/bin/mv';
     const CONFIG_SAMPLE_FILE_NAME = 'default.settings.php';
     const CONFIG_MAIN_FILE_NAME = 'settings.php';
     const CONFIG_MAIN_FILE_PATH = 'sites/default/settings.php';
+    const FOLDER_FLEXSHARE_WORDPRESS = '/var/flexshare/shares/wordpress';
 
     ///////////////////////////////////////////////////////////////////////////
     // V A R I A B L E S
@@ -162,19 +174,68 @@ class Drupal extends Daemon
         return self::PATH_DRUPAL.'/'.$folder_name.'/';
     }
     /**
+     * Get MariaDB Running Status
+     *
+     * @return @string status
+     */
+    function get_mariadb_running_status()
+    {
+        $mariadb = new MariaDB();
+        $status = $mariadb->get_status();
+        return $status;
+    }
+    /**
+     * Get MariaDB Password Status
+     *
+     * @return @boolean status
+     */
+    function get_mariadb_root_password_set_status()
+    {
+        $mariadb = new MariaDB();
+        $status = $mariadb->is_root_password_set();
+        return $status;
+    }
+    /**
+     * Get Web Server Running Status
+     *
+     * @return @string status
+     */
+    function get_web_server_running_status()
+    {
+        $web_server = new Httpd();
+        $status = $web_server->get_status();
+        return $status;
+    }
+    /**
+     * Check Dependencies Before Add A Project
+     *
+     * @return void
+     * @return Exception when somethings goes wrong with Dependencies 
+     */
+    function check_dependencies()
+    {
+        $error = '';
+        if ($this->get_web_server_running_status() == 'stopped') {
+            $error = lang('drupal_web_server_not_running');
+        } else if ($this->get_mariadb_running_status() != 'running') {
+            $error = lang('drupal_mariadb_server_not_running');
+        } else if (!$this->get_mariadb_root_password_set_status()) {
+            $error = lang('wordpress_mariadb_password_not_set');
+        } else if (!$this->get_versions(TRUE)) {
+            $error = lang('drupal_no_drupal_version_downloaded');
+        }
+        if ($error) {
+            throw new Engine_Exception($error);
+        }
+    }
+    /**
      * Get Drupal version
      *
      * @return @array Array of available versions
      */
-    function get_versions()
+    function get_versions($only_downloaded =FALSE)
     {
         $versions = array(
-                array(
-                    'version' => '8.3.6',
-                    'download_url' => 'https://ftp.drupal.org/files/projects/drupal-8.3.6.zip',
-                    'deletable' => FALSE,
-                    'size' => '',
-                ),
                 array(
                     'version' => '7.54',
                     'download_url' => 'https://ftp.drupal.org/files/projects/drupal-7.54.zip',
@@ -185,6 +246,10 @@ class Drupal extends Daemon
         foreach ($versions as $key => $value) {
             $versions[$key]['file_name'] = basename($versions[$key]['download_url']);
             $versions[$key]['clearos_path'] = $this->get_drupal_version_downloaded_path(basename($versions[$key]['download_url']));
+            if ($only_downloaded) {
+                if (!$versions[$key]['clearos_path'])
+                    unset($versions[$key]);
+            }
         }
         return $versions;
     }
@@ -254,6 +319,10 @@ class Drupal extends Daemon
         //$this->set_database_name($folder_name, $database_name);
         //$this->set_database_user($folder_name, $database_username);
         //$this->set_database_password($folder_name, $database_user_password);
+
+        $folder = new Folder($this->get_project_path($folder_name));
+        $folder->chmod(775, TRUE);
+        $folder->chown('apache', 'apache', TRUE);
         return $output;
     }
     /**
@@ -276,10 +345,6 @@ class Drupal extends Daemon
 
         if (!$main_file_obj->exists())
             $sample_file_obj->copy_to($main_file);
-
-        // set file permission writtable
-        $main_file_obj      = new File($main_file, TRUE);
-        $main_file_obj->chmod(777);
     }
     /**
     * Validate Folder Name.
@@ -472,7 +537,7 @@ class Drupal extends Daemon
             return FALSE;
         }
         $new_folder = new Folder(self::PATH_DRUPAL.'/'.$folder_name, TRUE);
-        $new_folder->create('root', 'root', 0777);
+        $new_folder->create('webconfig', 'webconfig', 775);
 
     }
     /**
@@ -495,9 +560,9 @@ class Drupal extends Daemon
         $file->copy_to($path_drupal);
 
         //// create a temp folder to copy
-        $folder = new Folder($this->get_project_path('drupal'));
+        $folder = new Folder($this->get_project_path('drupal'), TRUE);
         if (!$folder->exists())
-            $folder->create('root', 'root', 0777);
+            $folder->create('webconfig', 'webconfig', 755);
 
         $shell = new Shell();
         $options['validate_exit_code'] = FALSE;
@@ -506,7 +571,7 @@ class Drupal extends Daemon
 
         try {
             $retval = $shell->execute(
-                self::COMMAND_UNZIP, $command, TRUE, $options
+                self::COMMAND_UNZIP, $command, FALSE, $options
             );
         } catch (Engine_Exception $e) {
             throw new Exception($e);
@@ -533,12 +598,6 @@ class Drupal extends Daemon
             }
         }
 
-        $folder = new Folder($this->get_project_path($folder_name).'sites');
-        $folder->chmod(777);
-
-        $folder = new Folder($this->get_project_path($folder_name).'sites/default');
-        $folder->chmod(777); 
-
         // delete temp folder
         $folder = new Folder($this->get_project_path('drupal'));
         $folder->delete(TRUE);
@@ -547,6 +606,25 @@ class Drupal extends Daemon
         $file = new File($path_drupal.'/'.$version_name);
         if ($file->exists() && (!$file->is_directory()))
             $file->delete();
+
+        // Add Flexshare
+        // -------------
+
+        $flexshare = new Flexshare();
+        $comment = lang('drupal_app_name') . ' - ' . $folder_name;
+        $group = 'allusers';
+
+        try {
+
+            $flexshare->add_share($folder_name, $comment, $group, $this->get_project_path($folder_name), Flexshare::TYPE_WEB_SITE);
+        } catch (Accounts_Driver_Not_Set_Exception $e) {
+
+            $folder = new Folder($this->get_project_path($folder_name));
+            $folder->delete(TRUE);
+
+            redirect('/accounts');
+        }
+
         return $output;
     }
     /**
@@ -582,7 +660,7 @@ class Drupal extends Daemon
         $command = "$download_url -P $path_versions";
         try {
             $retval = $shell->execute(
-                self::COMMAND_WGET, $command, TRUE, $options
+                self::COMMAND_WGET, $command, FALSE, $options
             );
         } catch (Engine_Exception $e) {
             throw new Exception($e);
@@ -640,6 +718,12 @@ class Drupal extends Daemon
         $this->do_backup_folder($folder_name);
         $folder = new Folder($this->get_project_path($folder_name));
         $folder->delete(TRUE);
+
+        // Flexshre delete
+        /////////////////
+        
+        $flexshare = new Flexshare();
+        $flexshare->delete_share($folder_name, TRUE);
     }
     /**
      * Create backup of given project folder.
@@ -660,7 +744,7 @@ class Drupal extends Daemon
         $shell = new Shell();
         try {
             $retval = $shell->execute(
-                self::COMMAND_ZIP, $command, TRUE, $options
+                self::COMMAND_ZIP, $command, FALSE, $options
             );
         } catch (Engine_Exception $e) {
             throw new Exception($e);
@@ -670,7 +754,7 @@ class Drupal extends Daemon
 
         $backup_folder = new Folder(self::PATH_BACKUP);
         if (!$backup_folder->exists())
-            $backup_folder->create('root', 'root', 755);
+            $backup_folder->create('webconfig', 'webconfig', 755);
 
         if ($file->exists() && !$file->is_directory()) {
             $file->move_to(self::PATH_BACKUP);
@@ -762,12 +846,11 @@ class Drupal extends Daemon
     function backup_database($database_name, $root_username, $root_password)
     {
         $sql_file_path = self::PATH_BACKUP.$database_name.'__sql__'.date('Y-m-d-H-i-s').'.sql';
-        $command = "mysql -u $root_username -p$root_password -e \"mysqldump $database_name > $sql_file_path\"";
-        //echo $command; die;
+        $command = " -u $root_username -p$root_password $database_name > $sql_file_path";
         $shell = new Shell();
         try {
             $retval = $shell->execute(
-                self::COMMAND_MYSQL, $command, FALSE, $options
+                self::COMMAND_MYSQLDUMP, $command, FALSE, $options
             );
         } catch (Engine_Exception $e) {
             throw new Exception($e->get_message());

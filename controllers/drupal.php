@@ -64,6 +64,10 @@ class Drupal extends ClearOS_Controller
 
         $projects = $this->drupal->get_project_list();
         $versions = $this->drupal->get_versions();
+        $data['web_server_running_status'] = $this->drupal->get_web_server_running_status();
+        $data['mariadb_running_status'] = $this->drupal->get_mariadb_running_status();
+        $data['mariadb_password_status'] = $this->drupal->get_mariadb_root_password_set_status();
+        $data['drupal_version_not_downloaded'] = $this->drupal->get_versions(TRUE);
         $data['projects'] = $projects;
         $data['versions'] = $versions;
         $data['base_path'] = 'https://'.$_SERVER['SERVER_ADDR'].'/drupal/';
@@ -84,6 +88,8 @@ class Drupal extends ClearOS_Controller
 
         $this->lang->load('drupal');
         $this->load->library('drupal/Drupal');
+
+        $this->drupal->check_dependencies();
 
         $version_all = $this->drupal->get_versions();
         $versions = array();
@@ -170,7 +176,7 @@ class Drupal extends ClearOS_Controller
                     $this->drupal->delete_folder($folder_name);
 
                     if ($delete_database && $database_name) {
-                        //$this->drupal->backup_database($database_name, $root_username, $root_password); /// due to some temp error I commented it
+                        $this->drupal->backup_database($database_name, $root_username, $root_password);
                         $this->drupal->delete_database($database_name, $root_username, $root_password);
                     }
                     $this->page->set_message(lang('drupal_project_delete_success'), 'info');
